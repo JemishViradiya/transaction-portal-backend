@@ -8,14 +8,14 @@ router.get('/transactions', async (req, res) => {
     const { startDate, endDate } = req.query;
     const validStatuses = ["COMPLETED", "IN PROGRESS", "REJECTED"];
     try {
-       const start = new Date(startDate).toISOString();
-        const end = new Date(endDate).toISOString();
+       const start = new Date(startDate)
+        const end = new Date(endDate)
 
-        const transactions = await Transaction.find({
-            date: { $gte: start, $lte: end },
-            status: { $in: validStatuses }
-        }).sort({ date: 1 });
-        res.json(transactions);
+        const transactions = await Transaction.find();
+        const filteredTransactions = transactions.filter(transaction => {
+            return (transaction.date >= start && transaction.date <= end) && validStatuses.includes(transaction.status);
+        });
+        res.json(filteredTransactions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -27,6 +27,35 @@ router.post('/load-data', async (req, res) => {
     try {
         await Transaction.insertMany(data);
         res.status(200).json({ message: 'Data loaded successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update transaction
+router.put('/transactions/:id', async (req, res) => {
+    const { id } = req.params;
+    const { comments } = req.body;
+    try {
+        const temp = await Transaction.findOne({ id: id });
+        const transaction = await Transaction.findByIdAndUpdate(temp._id, { Comments:comments },);
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+        res.json(transaction);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/transactions/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const transaction = await Transaction.find({id: id});
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+        res.json(transaction[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

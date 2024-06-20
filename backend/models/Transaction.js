@@ -19,7 +19,7 @@ const transactionSchema = new mongoose.Schema({
     },
     amount: Number,
     currencyCd: String,
-    comments: String,
+    Comments: String,
     status: String
 });
 
